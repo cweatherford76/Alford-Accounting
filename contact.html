@@ -47,7 +47,7 @@
   <section class="section-tight">
     <div class="wrap contact-grid">
       <div class="reveal">
-        <form id="contactForm" novalidate>
+        <form id="contactForm" action="https://formspree.io/f/mkollrao" method="POST" novalidate>
           <div class="field">
             <label for="name">Your name</label>
             <input type="text" id="name" name="name" autocomplete="name" required>
@@ -75,8 +75,9 @@
             <label for="message">Your message</label>
             <textarea id="message" name="message" placeholder="A little about your situation and your goals…"></textarea>
           </div>
+          <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
           <button type="submit" class="btn btn-primary">Send message <span class="arrow">→</span></button>
-          <p id="formNote" style="font-size:0.88rem;color:var(--ink-soft);margin-top:14px">This opens your email app with the message ready to send.</p>
+          <p id="formNote" style="font-size:0.88rem;color:var(--ink-soft);margin-top:14px"></p>
         </form>
       </div>
 
@@ -143,6 +144,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
 (function () {
   var form = document.getElementById("contactForm");
   var note = document.getElementById("formNote");
+  var btn = form ? form.querySelector("button[type=submit]") : null;
   if (!form) return;
   form.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -153,21 +155,30 @@ document.getElementById("year").textContent = new Date().getFullYear();
       note.style.color = "#BE7050";
       return;
     }
-    var phone = document.getElementById("phone").value.trim();
-    var service = document.getElementById("service").value;
-    var message = document.getElementById("message").value.trim();
-    var body =
-      "Name: " + name + "\n" +
-      "Email: " + email + "\n" +
-      "Phone: " + (phone || "—") + "\n" +
-      "Interested in: " + service + "\n\n" +
-      message;
-    var link = "mailto:hello@alfordaccounting.com" +
-      "?subject=" + encodeURIComponent("Website inquiry from " + name) +
-      "&body=" + encodeURIComponent(body);
-    window.location.href = link;
-    note.textContent = "Opening your email app… if nothing happens, email hello@alfordaccounting.com directly.";
-    note.style.color = "var(--ink-soft)";
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    fetch(form.action, {
+      method: "POST",
+      body: new FormData(form),
+      headers: { Accept: "application/json" }
+    }).then(function (res) {
+      if (res.ok) {
+        form.reset();
+        note.textContent = "Message sent! I'll be in touch within 1–2 business days.";
+        note.style.color = "var(--teal)";
+        btn.textContent = "Sent ✓";
+      } else {
+        note.textContent = "Something went wrong — please email hello@alfordaccounting.com directly.";
+        note.style.color = "#BE7050";
+        btn.disabled = false;
+        btn.innerHTML = "Send message <span class=\"arrow\">→</span>";
+      }
+    }).catch(function () {
+      note.textContent = "Something went wrong — please email hello@alfordaccounting.com directly.";
+      note.style.color = "#BE7050";
+      btn.disabled = false;
+      btn.innerHTML = "Send message <span class=\"arrow\">→</span>";
+    });
   });
 })();
 </script>
