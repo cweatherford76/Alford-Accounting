@@ -145,11 +145,43 @@
 </footer>
 
 <script src="app.js"></script>
-<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 <script>
-  window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
-  formspree('initForm', { formElement: '#contactForm', formId: 'mkollrao' });
+document.getElementById("year").textContent = new Date().getFullYear();
+(function () {
+  var form = document.getElementById("contactForm");
+  var success = document.querySelector("[data-fs-success]");
+  var error = document.querySelector("[data-fs-error]");
+  var btn = form.querySelector("[data-fs-submit-btn]");
+  if (!form) return;
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    fetch("https://formspree.io/f/mkollrao", {
+      method: "POST",
+      body: new FormData(form),
+      headers: { Accept: "application/json" }
+    }).then(function (res) {
+      return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+    }).then(function (res) {
+      if (res.ok) {
+        form.style.display = "none";
+        success.style.display = "block";
+      } else {
+        var msg = (res.data.errors || []).map(function (e) { return e.message; }).join(", ");
+        error.textContent = msg || "Something went wrong — please email info@AlfordAccountingServices.com directly.";
+        error.style.display = "block";
+        btn.disabled = false;
+        btn.innerHTML = "Send message <span class=\"arrow\">→</span>";
+      }
+    }).catch(function () {
+      error.textContent = "Something went wrong — please email info@AlfordAccountingServices.com directly.";
+      error.style.display = "block";
+      btn.disabled = false;
+      btn.innerHTML = "Send message <span class=\"arrow\">→</span>";
+    });
+  });
+})();
 </script>
-<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
 </body>
 </html>
